@@ -7,10 +7,17 @@ class User < ApplicationRecord
   has_secure_password
   
   has_many :microposts
+  
   has_many :relationships
   has_many :followings, through: :relationships, source: :follow
   has_many :reverses_of_relationship, class_name: 'Relationship', foreign_key: 'follow_id'
   has_many :followers, through: :reverses_of_relationship, source: :user
+  
+  has_many :favorites
+  has_many :myboomings, through: :favorites, source: :micropost
+  has_many :reverses_of_favorite, class_name: 'Favorite', foreign_key: 'user_id'
+  has_many :myboomers, through: :reverses_of_favorite, source: :user
+  #ネットのサンプルでは上記２点が無し。
   
   def follow(other_user)
     unless self == other_user
@@ -30,4 +37,27 @@ class User < ApplicationRecord
   def feed_microposts
     Micropost.where(user_id: self.following_ids + [self.id])
   end
+  
+#  def micropost(other_micropost)から変更。
+#  def myboom(other_micropost)から変更。(2019.03.13)
+#  →考え①
+#   (micropost)の引数箇所は、favorites_comtrollerであり、この定義はdef createになる。
+#   その引数は、micropost = Micropost.find(params[:micropost_id])のため、
+#　 (micropost)になる。
+#  →考え②
+#   (micropost)の引数箇所は、users_comtrollerであり、この定義はdef createになるが、myboomしているアクションなので、
+#   def myboomings の
+  def myboom(micropost)
+    self.favorites.find_or_create_by(micropost_id: micropost.id)
+  end
+  
+  def no_myboom(micropost)
+    favorite = self.favorites.find_by(micropost_id: micropost.id)
+    favorite.destroy if favorite
+  end
+  
+  def mybooming?(micropost)
+    self.myboomings.include?(micropost)
+  end
+  
 end
