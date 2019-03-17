@@ -20,7 +20,7 @@ class UsersController < ApplicationController
     
     if @user.save
       flash[:success] = 'ユーザーを登録しました'
-      redirecto_to @user
+      redirect_to @user
     else
       flash.now[:danger] = 'ユーザーの登録に失敗しました。'
       render :new
